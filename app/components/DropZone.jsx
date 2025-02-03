@@ -12,25 +12,40 @@ const DropZone = ({ onItemAdded }) => {
     const data = e.dataTransfer.getData("text/plain");
     const newItem = JSON.parse(data);
 
+    console.log("Dragged data:", newItem);
+
+    const itemToAdd = {
+      id: newItem.type || newItem.id,
+      title: newItem.label || newItem.title,
+      imageUrl: newItem.imageUrl || "",
+      price: newItem.price || "0",
+      className: newItem.className || "",
+    };
+
+    console.log("Processed data:", itemToAdd);
+    console.log("Target slot:", slotIndex);
+
     setInventorySlots((prevSlots) => {
       const newSlots = [...prevSlots];
 
       if (!newSlots[slotIndex].item) {
         newSlots[slotIndex] = {
-          item: newItem,
+          item: itemToAdd,
           quantity: 1,
         };
-      } else if (newSlots[slotIndex].item.id === newItem.id) {
+        console.log("New item added");
+      } else if (newSlots[slotIndex].item.id === itemToAdd.id) {
         newSlots[slotIndex] = {
-          item: newItem,
+          item: itemToAdd,
           quantity: newSlots[slotIndex].quantity + 1,
         };
+        console.log("Existing item quantity increased");
       }
 
       return newSlots;
     });
 
-    onItemAdded && onItemAdded(newItem);
+    onItemAdded && onItemAdded(itemToAdd);
   };
 
   const handleDragOver = (e) => {
