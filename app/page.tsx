@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import DragImage from "./components/DragImage";
 import DropZone from "./components/DropZone";
 
@@ -9,7 +10,10 @@ interface DragItem {
 }
 
 export default function Home() {
+  const [totalItems, setTotalItems] = useState(0);
+
   const handleItemAdded = (item: DragItem) => {
+    setTotalItems((prev) => prev + 1);
     console.log("Item added:", item);
   };
 
@@ -21,6 +25,7 @@ export default function Home() {
       <div>
         <DropZone onItemAdded={handleItemAdded} />
       </div>
+      <div className="fixed top-4 right-4">Total Items: {totalItems}</div>
     </div>
   );
 }
