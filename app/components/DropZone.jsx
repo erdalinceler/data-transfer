@@ -2,32 +2,34 @@
 import { useState } from "react";
 
 const DropZone = ({ onItemAdded }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [inventorySlots, setInventorySlots] = useState(
+    Array(4).fill({ item: null, quantity: 0 })
+  );
 
-  const handleDrop = (e) => {
+  const handleDrop = (e, slotIndex) => {
     e.preventDefault();
 
     const data = e.dataTransfer.getData("text/plain");
     const newItem = JSON.parse(data);
 
-    // Add item to cart
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === newItem.id);
+    setInventorySlots((prevSlots) => {
+      const newSlots = [...prevSlots];
 
-      if (existingItem) {
-        // If item already exists in cart, increase its quantity
-        return prevItems.map((item) =>
-          item.id === newItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+      if (!newSlots[slotIndex].item) {
+        newSlots[slotIndex] = {
+          item: newItem,
+          quantity: 1,
+        };
+      } else if (newSlots[slotIndex].item.id === newItem.id) {
+        newSlots[slotIndex] = {
+          item: newItem,
+          quantity: newSlots[slotIndex].quantity + 1,
+        };
       }
 
-      // Add new item to cart
-      return [...prevItems, newItem];
+      return newSlots;
     });
 
-    // Send information to parent component
     onItemAdded && onItemAdded(newItem);
   };
 
@@ -36,51 +38,58 @@ const DropZone = ({ onItemAdded }) => {
   };
 
   const handleDiscard = () => {
-    setCartItems([]);
+    setInventorySlots(Array(4).fill({ item: null, quantity: 0 }));
   };
 
   return (
     <div
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-white/90"
-      style={{
-        width: "300px",
-        minHeight: "400px",
-      }}
+      className="bg-white/90 rounded-lg shadow-lg p-4"
+      style={{ width: "300px" }}
     >
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-black">Shopping Cart</h2>
+        <h2 className="text-xl font-bold text-black">Inventory</h2>
         <button
           onClick={handleDiscard}
           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
         >
-          Discard
+          Discard All
         </button>
       </div>
-      {cartItems.length === 0 ? (
-        <p className="text-gray-700">Drag items here</p>
-      ) : (
-        <div className="space-y-2">
-          {cartItems.map((item, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center bg-gray-100 p-3 rounded shadow-sm"
-            >
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                style={{ width: "50px" }}
-              />
-              <span className="text-black font-medium">{item.title}</span>
-              <span className="text-gray-700">x{item.quantity}</span>
-              <span className="text-black font-semibold">
-                ${(item.price.replace("$", "") * item.quantity).toFixed(2)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        {inventorySlots.map((slot, index) => (
+          <div
+            key={index}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragOver={handleDragOver}
+            className="border-2 border-dashed border-gray-300 rounded-lg p-3 h-32 flex flex-col items-center justify-center bg-gray-50 relative"
+          >
+            {slot.item ? (
+              <>
+                <img
+                  src={slot.item.imageUrl}
+                  alt={slot.item.title}
+                  className="w-16 h-16 object-contain mb-2"
+                />
+                <span className="text-sm font-medium text-black">
+                  {slot.item.title}
+                </span>
+                <span className="text-xs text-gray-600">
+                  $
+                  {(slot.item.price.replace("$", "") * slot.quantity).toFixed(
+                    2
+                  )}
+                </span>
+                <span className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                  x{slot.quantity}
+                </span>
+              </>
+            ) : (
+              <p className="text-gray-400 text-sm">Empty Slot</p>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
